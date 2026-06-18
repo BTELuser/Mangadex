@@ -1,1 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Character Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rampart+One&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1A1A1F;--paper:#F7F3E8;--paper-soft:#ECE5D3;--paper-deep:#E3DBC6;--red:#E63946;--yellow:#FFC23C;--navy:#2C3454;--green:#4C9A6B;--pink:#E8748A;--purple:#6E5AA8;--line:#C9C2AE;--font-display:'Rampart One',cursive;--font-body:'Zen Kaku Gothic New','Hiragino Kaku Gothic ProN',sans-serif;--font-mono:'Space Mono',monospace;--shadow-hard:4px 4px 0 var(--ink);}
+*{box-sizing:border-box;}html,body{margin:0;padding:0;}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-body);line-height:1.5;min-height:100vh;}
+img{max-width:100%;display:block;}::selection{background:var(--yellow);}:focus-visible{outline:3px solid var(--yellow);outline-offset:2px;}
+.app-header{position:relative;border-bottom:4px solid var(--ink);background:var(--paper-soft);overflow:hidden;}
+.header-halftone{position:absolute;inset:0;background-image:radial-gradient(circle,var(--ink) 1.4px,transparent 1.6px);background-size:14px 14px;opacity:.07;pointer-events:none;}
+.header-stripe{position:absolute;top:0;right:-10%;width:60%;height:100%;background:repeating-linear-gradient(115deg,var(--red) 0 10px,transparent 10px 26px);opacity:.18;pointer-events:none;}
+.header-content{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:28px 28px 22px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px;}
+.title-eyebrow{font-family:var(--font-mono);font-size:.78rem;letter-spacing:.32em;text-transform:uppercase;color:var(--red);margin:0 0 6px;}
+.title-main{font-family:var(--font-display);font-size:clamp(2rem,5vw,3.4rem);margin:0;letter-spacing:.04em;text-shadow:3px 3px 0 var(--paper),5px 5px 0 var(--ink);line-height:1.1;}
+.header-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
+.search-wrap{position:relative;}.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink);opacity:.6;pointer-events:none;}
+#searchInput{font-family:var(--font-mono);font-size:.85rem;padding:10px 12px 10px 32px;border:3px solid var(--ink);background:var(--paper);min-width:200px;}
+.btn{font-family:var(--font-mono);font-weight:700;font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;border:3px solid var(--ink);background:var(--paper);color:var(--ink);padding:10px 16px;cursor:pointer;box-shadow:var(--shadow-hard);transition:transform .12s ease,box-shadow .12s ease;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;}
+.btn svg{width:14px;height:14px;}.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 var(--ink);}.btn:active{transform:translate(0,0);box-shadow:1px 1px 0 var(--ink);}
+.btn-primary{background:var(--red);color:var(--paper);}.btn-danger{background:var(--ink);color:var(--paper);}.btn-ghost{background:transparent;box-shadow:none;border-color:var(--line);}.btn-ghost:hover{box-shadow:3px 3px 0 var(--ink);border-color:var(--ink);}
+.btn-sm{padding:7px 12px;font-size:.72rem;}.btn-burst{transform:rotate(-2deg);}.btn-burst:hover{transform:rotate(-2deg) translate(-2px,-2px);}
+.tab-nav{max-width:1280px;margin:0 auto;display:flex;align-items:flex-end;gap:6px;padding:14px 28px 0;border-bottom:3px solid var(--ink);flex-wrap:wrap;}
+.tab-btn{font-family:var(--font-display);font-size:1rem;letter-spacing:.02em;border:3px solid var(--ink);border-bottom:none;background:var(--paper-soft);color:var(--ink);padding:10px 22px;cursor:pointer;position:relative;top:3px;transition:top .12s ease,background .12s ease;}
+.tab-btn.active{background:var(--paper);top:0;}.tab-btn:not(.active):hover{background:var(--paper-deep);}
+.tab-nav-spacer{flex:1;}.tab-nav .btn{margin-bottom:8px;}
+.view-container{max-width:1280px;margin:0 auto;padding:26px 28px 60px;}.view{display:none;}.view.active{display:block;}
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;}
+.chip{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;border:2px solid var(--ink);background:var(--paper);padding:6px 12px;cursor:pointer;user-select:none;}
+.chip.active{background:var(--ink);color:var(--paper);}
+.cast-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:22px;}
+.character-card{background:var(--paper);border:3px solid var(--ink);box-shadow:var(--shadow-hard);cursor:pointer;position:relative;transition:transform .12s ease,box-shadow .12s ease;display:flex;flex-direction:column;}
+.character-card:hover{transform:translate(-3px,-3px);box-shadow:7px 7px 0 var(--ink);}
+.card-number{position:absolute;top:-10px;left:-10px;background:var(--red);color:var(--paper);font-family:var(--font-mono);font-weight:700;font-size:.7rem;padding:4px 9px;border:2px solid var(--ink);transform:rotate(-8deg);z-index:2;box-shadow:2px 2px 0 var(--ink);}
+.card-portrait{aspect-ratio:3/4;border-bottom:3px solid var(--ink);background:var(--paper-soft);overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.card-portrait img{width:100%;height:100%;object-fit:cover;}.card-portrait .placeholder-icon{width:34%;height:34%;color:var(--line);}
+.card-body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:6px;flex:1;}
+.card-name{font-family:var(--font-display);font-size:1.05rem;line-height:1.25;}
+.card-meta{font-family:var(--font-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;opacity:.7;display:flex;justify-content:space-between;gap:6px;}
+.card-tagline{font-size:.82rem;opacity:.85;min-height:1.4em;}.card-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:auto;}
+.card-tags .tag{font-family:var(--font-mono);font-size:.65rem;text-transform:uppercase;border:1.5px solid var(--ink);padding:2px 6px;}
+.role-pill{display:inline-block;font-family:var(--font-mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border:1.5px solid var(--ink);}
+.role-protagonist{background:var(--red);color:var(--paper);}.role-antagonist{background:var(--ink);color:var(--paper);}.role-deuteragonist{background:var(--navy);color:var(--paper);}
+.role-supporting{background:var(--yellow);color:var(--ink);}.role-mentor{background:var(--purple);color:var(--paper);}.role-side,.role-comic-relief,.role-other{background:var(--paper);color:var(--ink);}
+.empty-state{border:3px dashed var(--line);padding:60px 24px;text-align:center;font-family:var(--font-mono);text-transform:uppercase;letter-spacing:.05em;opacity:.7;}
+.empty-state strong{display:block;font-family:var(--font-display);font-size:1.3rem;text-transform:none;margin-bottom:8px;opacity:1;}
+.modal-overlay{position:fixed;inset:0;background:rgba(26,26,31,.72);display:flex;align-items:center;justify-content:center;z-index:200;padding:18px;}
+.modal-overlay[hidden]{display:none;}
+.modal-panel{background:var(--paper);border:4px solid var(--ink);box-shadow:10px 10px 0 var(--ink);width:min(880px,100%);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;}
+.modal-panel-sm{width:min(420px,100%);}
+.modal-header{border-bottom:3px solid var(--ink);background:var(--paper-soft);padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+.modal-title-wrap{display:flex;align-items:center;gap:12px;flex:1;min-width:0;}
+.modal-number{font-family:var(--font-mono);font-weight:700;font-size:.75rem;border:2px solid var(--ink);padding:4px 8px;background:var(--paper);white-space:nowrap;}
+.modal-name-input{font-family:var(--font-display);font-size:1.3rem;border:none;background:transparent;flex:1;min-width:0;padding:4px;border-bottom:3px solid transparent;}
+.modal-name-input:focus{border-bottom:3px solid var(--ink);outline:none;}.modal-header-actions{display:flex;gap:8px;}
+.modal-tabs{display:flex;gap:2px;overflow-x:auto;border-bottom:3px solid var(--ink);background:var(--paper-deep);padding:0 12px;}
+.modal-tab{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;border:none;background:transparent;color:var(--ink);padding:12px 14px;cursor:pointer;border-bottom:4px solid transparent;white-space:nowrap;opacity:.6;}
+.modal-tab.active{opacity:1;border-bottom:4px solid var(--red);font-weight:700;}
+.modal-body{padding:20px;overflow-y:auto;flex:1;}.modal-section{display:none;}.modal-section.active{display:block;}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.field label{font-family:var(--font-mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;opacity:.75;}
+.field input,.field select,.field textarea{font-family:var(--font-body);font-size:.92rem;border:2px solid var(--ink);background:var(--paper);padding:9px 10px;width:100%;border-radius:0;}
+.field textarea{resize:vertical;min-height:80px;}.field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;}
+.hint{font-family:var(--font-mono);font-size:.68rem;opacity:.55;margin-top:-2px;}
+.portrait-preview{width:90px;height:120px;border:2px solid var(--ink);background:var(--paper-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;}
+.portrait-preview img{width:100%;height:100%;object-fit:cover;}.portrait-preview svg{width:36px;height:36px;color:var(--line);}
+.portrait-row{display:flex;gap:14px;align-items:flex-start;}.portrait-row .field{flex:1;}
+.stat-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.stat-label{font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.05em;width:96px;flex-shrink:0;}
+.stat-track{flex:1;height:18px;border:2px solid var(--ink);background:var(--paper-soft);overflow:hidden;}
+.stat-fill{height:100%;background:var(--red);background-image:repeating-linear-gradient(135deg,rgba(0,0,0,.18) 0 4px,transparent 4px 8px);transition:width .15s ease;}
+.stat-input{width:54px;font-family:var(--font-mono);font-size:.8rem;text-align:center;border:2px solid var(--ink);background:var(--paper);padding:4px;}
+.list-block{border:2px solid var(--ink);background:var(--paper-soft);padding:12px;margin-bottom:12px;}
+.list-block-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.list-empty{font-family:var(--font-mono);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;opacity:.55;border:2px dashed var(--line);padding:18px;text-align:center;}
+.icon-btn{border:2px solid var(--ink);background:var(--paper);cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.icon-btn svg{width:14px;height:14px;}.icon-btn:hover{background:var(--red);color:var(--paper);}
+.inline-input{border:none;background:transparent;flex:1;font-size:.95rem;font-family:var(--font-body);font-weight:700;padding:4px 2px;min-width:0;}
+.inline-input:focus{outline:2px solid var(--yellow);}
+.inline-textarea{margin-top:8px;min-height:60px;border:2px solid var(--ink);background:var(--paper);width:100%;padding:8px;font-family:var(--font-body);font-size:.85rem;resize:vertical;}
+.badge{font-family:var(--font-mono);font-size:.65rem;text-transform:uppercase;letter-spacing:.05em;padding:3px 8px;border:1.5px solid var(--ink);display:inline-block;}
+.badge-family{background:var(--navy);color:var(--paper);}.badge-ally{background:var(--green);color:var(--paper);}.badge-rival{background:var(--yellow);color:var(--ink);}
+.badge-romance{background:var(--pink);color:var(--ink);}.badge-enemy{background:var(--red);color:var(--paper);}.badge-mentor{background:var(--purple);color:var(--paper);}.badge-other{background:var(--line);color:var(--ink);}
+.map-layout{display:flex;gap:20px;flex-wrap:wrap;}
+.map-canvas-wrap{flex:2;min-width:300px;border:3px solid var(--ink);background:var(--paper-soft);background-image:radial-gradient(circle,var(--ink) 1.4px,transparent 1.6px);background-size:16px 16px;background-blend-mode:overlay;aspect-ratio:1/1;max-height:640px;}
+.map-canvas-wrap svg{width:100%;height:100%;display:block;}.map-sidebar{flex:1;min-width:240px;display:flex;flex-direction:column;gap:16px;}
+.legend{display:flex;flex-direction:column;gap:6px;}.legend-row{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:.72rem;text-transform:uppercase;}
+.legend-swatch{width:22px;height:10px;border:1.5px solid var(--ink);flex-shrink:0;}
+.map-detail{border:2px solid var(--ink);background:var(--paper);padding:14px;font-size:.88rem;flex:1;}
+.map-detail h4{font-family:var(--font-display);margin:0 0 8px;font-size:1.1rem;}
+.map-detail .conn-row{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:.82rem;}
+.map-detail .conn-row:last-child{border-bottom:none;}
+.map-node{cursor:pointer;}.map-node circle{fill:var(--paper);stroke:var(--ink);stroke-width:2;}
+.map-node text{font-family:var(--font-mono);font-size:9px;fill:var(--ink);text-anchor:middle;pointer-events:none;}
+.map-node.dim{opacity:.25;}.map-node.highlight circle{stroke:var(--red);stroke-width:3;}
+.map-edge{stroke-width:2;fill:none;opacity:.55;}.map-edge.dim{opacity:.08;}.map-edge.highlight{opacity:1;stroke-width:3;}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--yellow);border:3px solid var(--ink);font-family:var(--font-mono);font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;padding:12px 18px;box-shadow:var(--shadow-hard);z-index:300;}
+.toast[hidden]{display:none;}.confirm-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:14px;}
+@media(max-width:640px){.header-content{padding:20px 16px;}.tab-nav{padding:12px 16px 0;}.view-container{padding:18px 16px 50px;}.modal-body{padding:14px;}.modal-overlay{padding:0;}.modal-panel{max-height:100vh;height:100%;width:100%;border-width:0;box-shadow:none;}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="app-header">
+    <div class="header-halftone"></div>
+    <div class="header-stripe"></div>
+    <div class="header-content">
+      <div class="logo-block">
+        <p class="title-eyebrow">Casting File</p>
+        <h1 class="title-main">Character Planner</h1>
+      </div>
+      <div class="header-actions">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="search" id="searchInput" placeholder="Search cast..."/>
+        </div>
+        <button class="btn btn-primary btn-burst" id="newCharBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Character
+        </button>
+      </div>
+    </div>
+  </header>
 
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-view="cast">Cast</button>
+    <button class="tab-btn" data-view="map">Relationship Map</button>
+    <div class="tab-nav-spacer"></div>
+    <button class="btn btn-ghost btn-sm" id="exportBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+    <button class="btn btn-ghost btn-sm" id="importBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import
+    </button>
+    <input type="file" id="importFile" accept="application/json" hidden/>
+  </nav>
+
+  <main class="view-container">
+    <section id="castView" class="view active">
+      <div class="filter-bar" id="roleFilters"></div>
+      <div id="castGrid" class="cast-grid"></div>
+      <div id="emptyState" class="empty-state" hidden><strong>No characters yet</strong>Start your cast with the New Character button above.</div>
+    </section>
+    <section id="mapView" class="view">
+      <div class="map-layout">
+        <div class="map-canvas-wrap"><svg id="relSvg" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"></svg></div>
+        <aside class="map-sidebar">
+          <div class="list-block">
+            <div class="title-eyebrow" style="margin-bottom:8px">Relationship Types</div>
+            <div class="legend" id="relLegend"></div>
+          </div>
+          <div class="map-detail" id="mapDetail"><h4>Relationship Map</h4><p style="margin:0">Click a character to see their connections.</p></div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div id="charModalOverlay" class="modal-overlay" hidden>
+    <div class="modal-panel">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-number" id="modalNumber">No. 001</span>
+          <input type="text" id="charName" class="modal-name-input" placeholder="Character name"/>
+        </div>
+        <div class="modal-header-actions">
+          <button class="btn btn-danger btn-sm" id="deleteCharBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            Delete
+          </button>
+          <button class="btn btn-sm" id="closeModalBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Done
+          </button>
+        </div>
+      </div>
+      <div class="modal-tabs">
+        <button class="modal-tab active" data-section="profile">Profile</button>
+        <button class="modal-tab" data-section="personality">Personality &amp; Backstory</button>
+        <button class="modal-tab" data-section="powers">Powers &amp; Stats</button>
+        <button class="modal-tab" data-section="relationships">Relationships</button>
+        <button class="modal-tab" data-section="design">Design Notes</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-section active" data-section="profile">
+          <div class="portrait-row">
+            <div class="portrait-preview" id="portraitPreview">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div class="field">
+              <label for="charImage">Reference image URL</label>
+              <input type="text" id="charImage" placeholder="https://..."/>
+              <p class="hint">Link to concept art or reference photo.</p>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label for="charAge">Age</label><input type="text" id="charAge" placeholder="e.g. 17"/></div>
+            <div class="field"><label for="charGender">Gender</label><input type="text" id="charGender" placeholder="e.g. Female"/></div>
+            <div class="field"><label for="charRole">Cast role</label>
+              <select id="charRole">
+                <option value="protagonist">Protagonist</option><option value="deuteragonist">Deuteragonist</option>
+                <option value="antagonist">Antagonist</option><option value="supporting">Supporting</option>
+                <option value="mentor">Mentor</option><option value="side">Side Character</option>
+                <option value="comic-relief">Comic Relief</option><option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field"><label for="charOccupation">Occupation / Affiliation</label><input type="text" id="charOccupation" placeholder="e.g. Shadow Guild member"/></div>
+          <div class="field"><label for="charTagline">One-line description</label><input type="text" id="charTagline" placeholder="A quick hook for who this character is"/></div>
+          <div class="field-row">
+            <div class="field"><label for="charHeight">Height</label><input type="text" id="charHeight" placeholder="e.g. 168cm"/></div>
+            <div class="field"><label for="charHair">Hair</label><input type="text" id="charHair" placeholder="Color / style"/></div>
+            <div class="field"><label for="charEyes">Eyes</label><input type="text" id="charEyes" placeholder="Color / shape"/></div>
+          </div>
+          <div class="field"><label for="charAppearance">Appearance details</label><textarea id="charAppearance" placeholder="Build, outfit, distinguishing marks..."></textarea></div>
+          <div class="field"><label for="charTags">Tags (comma separated)</label><input type="text" id="charTags" placeholder="e.g. main cast, arc 2, swordsman"/></div>
+        </div>
+        <div class="modal-section" data-section="personality">
+          <div class="field"><label for="charPersonality">Personality</label><textarea id="charPersonality" placeholder="Core traits, how they speak and act, quirks..."></textarea></div>
+          <div class="field-row">
+            <div class="field"><label for="charLikes">Likes</label><textarea id="charLikes" placeholder="One per line"></textarea></div>
+            <div class="field"><label for="charDislikes">Dislikes</label><textarea id="charDislikes" placeholder="One per line"></textarea></div>
+          </div>
+          <div class="field"><label for="charBackstory">Backstory</label><textarea id="charBackstory" style="min-height:140px" placeholder="History, key formative events..."></textarea></div>
+          <div class="field-row">
+            <div class="field"><label for="charGoals">Goals / Motivation</label><textarea id="charGoals" placeholder="What they want and why"></textarea></div>
+            <div class="field"><label for="charFlaws">Fears / Flaws</label><textarea id="charFlaws" placeholder="Weaknesses, fears, blind spots"></textarea></div>
+          </div>
+        </div>
+        <div class="modal-section" data-section="powers">
+          <div class="title-eyebrow" style="margin-bottom:10px">Stat Block</div>
+          <div id="statRows"></div>
+          <div class="title-eyebrow" style="margin:20px 0 10px">Abilities &amp; Techniques</div>
+          <div id="abilityList"></div>
+          <button class="btn btn-sm" id="addAbilityBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Ability
+          </button>
+        </div>
+        <div class="modal-section" data-section="relationships">
+          <div class="title-eyebrow" style="margin-bottom:10px">Connections</div>
+          <div id="relationshipList"></div>
+          <button class="btn btn-sm" id="addRelationshipBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Relationship
+          </button>
+        </div>
+        <div class="modal-section" data-section="design">
+          <div class="field"><label for="charDesignNotes">Visual design notes</label><textarea id="charDesignNotes" style="min-height:220px" placeholder="Color palette, costume design, symbolism, visual motifs..."></textarea></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmOverlay" class="modal-overlay" hidden>
+    <div class="modal-panel modal-panel-sm">
+      <div class="modal-header"><span class="title-eyebrow" style="margin:0">Confirm</span></div>
+      <div class="modal-body">
+        <p id="confirmMessage" style="margin-top:0"></p>
+        <div class="confirm-actions">
+          <button class="btn" id="confirmCancel">Cancel</button>
+          <button class="btn btn-danger" id="confirmOk">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+</div>
+
+<script>
+const STORAGE_KEY='manga-characters';
+const ROLES=[{value:'protagonist',label:'Protagonist'},{value:'deuteragonist',label:'Deuteragonist'},{value:'antagonist',label:'Antagonist'},{value:'supporting',label:'Supporting'},{value:'mentor',label:'Mentor'},{value:'side',label:'Side Character'},{value:'comic-relief',label:'Comic Relief'},{value:'other',label:'Other'}];
+const ROLE_MAP=Object.fromEntries(ROLES.map(r=>[r.value,r]));
+const STATS=[{key:'power',label:'Power'},{key:'speed',label:'Speed'},{key:'intelligence',label:'Intelligence'},{key:'defense',label:'Defense'},{key:'technique',label:'Technique'}];
+const REL_TYPES=[{value:'family',label:'Family',badge:'badge-family',color:'#2C3454'},{value:'ally',label:'Ally',badge:'badge-ally',color:'#4C9A6B'},{value:'rival',label:'Rival',badge:'badge-rival',color:'#FFC23C'},{value:'romance',label:'Romance',badge:'badge-romance',color:'#E8748A'},{value:'enemy',label:'Enemy',badge:'badge-enemy',color:'#E63946'},{value:'mentor',label:'Mentor',badge:'badge-mentor',color:'#6E5AA8'},{value:'other',label:'Other',badge:'badge-other',color:'#C9C2AE'}];
+const REL_TYPE_MAP=Object.fromEntries(REL_TYPES.map(r=>[r.value,r]));
+const ROLE_COLORS={protagonist:'#E63946',antagonist:'#1A1A1F',deuteragonist:'#2C3454',supporting:'#4C9A6B',mentor:'#6E5AA8',side:'#C9C2AE','comic-relief':'#FFC23C',other:'#C9C2AE'};
+const ICON_TRASH=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+const PLACEHOLDER_SVG=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`;
+
+let state={characters:[],view:'cast',search:'',roleFilter:null,editingId:null,highlightId:null};
+
+function loadCharacters(){try{const r=localStorage.getItem(STORAGE_KEY);if(r)state.characters=JSON.parse(r);}catch(e){state.characters=[];}}
+function saveCharacters(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(state.characters));}catch(e){showToast('Could not save.');}}
+function uid(p){return p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.hidden=true,2200);}
+function newCharacter(){return{id:uid('char'),name:'',imageUrl:'',age:'',gender:'',role:'supporting',occupation:'',tagline:'',height:'',hair:'',eyes:'',appearance:'',tags:[],personality:'',likes:'',dislikes:'',backstory:'',goals:'',flaws:'',stats:{power:50,speed:50,intelligence:50,defense:50,technique:50},abilities:[],relationships:[],designNotes:'',createdAt:Date.now()};}
+function isBlank(c){return!c.name.trim()&&!c.imageUrl.trim()&&!c.tagline.trim()&&!c.occupation.trim()&&!c.appearance.trim()&&!c.personality.trim()&&!c.backstory.trim()&&!c.designNotes.trim()&&!c.abilities.length&&!c.relationships.length&&!c.tags.length;}
+function getEditing(){return state.characters.find(x=>x.id===state.editingId);}
+
+function setView(v){state.view=v;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.view===v));document.getElementById('castView').classList.toggle('active',v==='cast');document.getElementById('mapView').classList.toggle('active',v==='map');if(v==='map')renderMap();}
+
+function renderRoleFilters(){const wrap=document.getElementById('roleFilters');const used=new Set(state.characters.map(c=>c.role));let html=`<button class="chip ${state.roleFilter===null?'active':''}" data-role="">All (${state.characters.length})</button>`;ROLES.forEach(r=>{if(!used.has(r.value))return;const n=state.characters.filter(c=>c.role===r.value).length;html+=`<button class="chip ${state.roleFilter===r.value?'active':''}" data-role="${r.value}">${esc(r.label)} (${n})</button>`;});wrap.innerHTML=html;wrap.querySelectorAll('.chip').forEach(chip=>chip.addEventListener('click',()=>{state.roleFilter=chip.dataset.role||null;renderRoleFilters();renderGallery();}));}
+
+function getFiltered(){let list=state.characters;if(state.roleFilter)list=list.filter(c=>c.role===state.roleFilter);if(state.search.trim()){const q=state.search.trim().toLowerCase();list=list.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.tagline||'').toLowerCase().includes(q)||(c.tags||[]).some(t=>t.toLowerCase().includes(q)));}return list;}
+
+function renderGallery(){const grid=document.getElementById('castGrid'),empty=document.getElementById('emptyState'),list=getFiltered();if(!list.length){grid.innerHTML='';empty.hidden=false;empty.innerHTML=state.characters.length?'<strong>No matches</strong>Try a different search.':'<strong>No characters yet</strong>Start your cast with the New Character button above.';return;}empty.hidden=true;grid.innerHTML=list.map(c=>{const idx=state.characters.findIndex(x=>x.id===c.id),num=String(idx+1).padStart(3,'0'),ri=ROLE_MAP[c.role]||ROLE_MAP.other;const img=c.imageUrl?`<img src="${esc(c.imageUrl)}" alt="" onerror="this.style.display='none'">`:'';const ph=`<svg class="placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 7-7h2a7 7 0 0 1 7 7v1"/></svg>`;const tags=(c.tags||[]).slice(0,4).map(t=>`<span class="tag">${esc(t)}</span>`).join('');return`<div class="character-card" data-id="${c.id}"><div class="card-number">No. ${num}</div><div class="card-portrait">${ph}${img}</div><div class="card-body"><div class="card-name">${esc(c.name)||'Unnamed'}</div><div class="card-meta"><span class="role-pill role-${c.role}">${esc(ri.label)}</span><span>${c.age?'Age '+esc(c.age):''}</span></div><div class="card-tagline">${esc(c.tagline)}</div><div class="card-tags">${tags}</div></div></div>`;}).join('');grid.querySelectorAll('.character-card').forEach(card=>card.addEventListener('click',()=>openEditor(card.dataset.id)));}
+
+let saveTimer;
+function scheduleSave(){clearTimeout(saveTimer);saveTimer=setTimeout(saveCharacters,500);}
+
+function openEditor(id){const c=state.characters.find(x=>x.id===id);if(!c)return;state.editingId=id;const idx=state.characters.findIndex(x=>x.id===id);document.getElementById('modalNumber').textContent='No. '+String(idx+1).padStart(3,'0');[['charName','name'],['charImage','imageUrl'],['charAge','age'],['charGender','gender'],['charRole','role'],['charOccupation','occupation'],['charTagline','tagline'],['charHeight','height'],['charHair','hair'],['charEyes','eyes'],['charAppearance','appearance'],['charPersonality','personality'],['charLikes','likes'],['charDislikes','dislikes'],['charBackstory','backstory'],['charGoals','goals'],['charFlaws','flaws'],['charDesignNotes','designNotes']].forEach(([el,key])=>document.getElementById(el).value=c[key]||'');document.getElementById('charTags').value=(c.tags||[]).join(', ');updatePortrait();renderStatRows(c);renderAbilities(c);renderRelationships(c);switchTab('profile');document.getElementById('charModalOverlay').hidden=false;document.getElementById('charName').focus();}
+
+function closeEditor(){clearTimeout(saveTimer);const c=getEditing();document.getElementById('charModalOverlay').hidden=true;if(c&&isBlank(c))state.characters=state.characters.filter(x=>x.id!==c.id);state.editingId=null;renderRoleFilters();renderGallery();if(state.view==='map')renderMap();saveCharacters();}
+
+function switchTab(s){document.querySelectorAll('.modal-tab').forEach(t=>t.classList.toggle('active',t.dataset.section===s));document.querySelectorAll('.modal-section').forEach(s2=>s2.classList.toggle('active',s2.dataset.section===s));}
+
+function updatePortrait(){const wrap=document.getElementById('portraitPreview'),url=document.getElementById('charImage').value.trim();wrap.innerHTML='';if(url){const img=document.createElement('img');img.src=url;img.alt='';img.onerror=()=>wrap.innerHTML=PLACEHOLDER_SVG;wrap.appendChild(img);}else wrap.innerHTML=PLACEHOLDER_SVG;}
+
+function renderStatRows(c){const wrap=document.getElementById('statRows');wrap.innerHTML=STATS.map(s=>{const v=(c.stats||{})[s.key]??50;return`<div class="stat-row"><span class="stat-label">${esc(s.label)}</span><div class="stat-track"><div class="stat-fill" id="fill_${s.key}" style="width:${v}%"></div></div><input class="stat-input" type="number" min="0" max="100" value="${v}" data-stat="${s.key}"/></div>`;}).join('');wrap.querySelectorAll('.stat-input').forEach(inp=>inp.addEventListener('input',()=>{const c=getEditing();if(!c)return;const v=Math.max(0,Math.min(100,parseInt(inp.value)||0));c.stats[inp.dataset.stat]=v;document.getElementById('fill_'+inp.dataset.stat).style.width=v+'%';scheduleSave();}));}
+
+function renderAbilities(c){const wrap=document.getElementById('abilityList');if(!(c.abilities||[]).length){wrap.innerHTML='<div class="list-empty">No abilities added yet.</div>';return;}wrap.innerHTML=c.abilities.map((a,i)=>`<div class="list-block"><div class="list-block-head"><input class="inline-input" type="text" placeholder="Ability name" value="${esc(a.name)}" data-abl-name="${i}"/><button class="icon-btn" data-abl-del="${i}">${ICON_TRASH}</button></div><textarea class="inline-textarea" placeholder="Description…" data-abl-desc="${i}">${esc(a.description)}</textarea></div>`).join('');wrap.querySelectorAll('[data-abl-name]').forEach(el=>el.addEventListener('input',()=>{const c=getEditing();if(c)c.abilities[el.dataset.ablName].name=el.value;scheduleSave();}));wrap.querySelectorAll('[data-abl-desc]').forEach(el=>el.addEventListener('input',()=>{const c=getEditing();if(c)c.abilities[el.dataset.ablDesc].description=el.value;scheduleSave();}));wrap.querySelectorAll('[data-abl-del]').forEach(btn=>btn.addEventListener('click',()=>{const c=getEditing();if(!c)return;c.abilities.splice(parseInt(btn.dataset.ablDel),1);renderAbilities(c);scheduleSave();}));}
+
+function renderRelationships(c){const wrap=document.getElementById('relationshipList'),others=state.characters.filter(x=>x.id!==c.id);if(!(c.relationships||[]).length){wrap.innerHTML='<div class="list-empty">No relationships added yet.</div>';return;}wrap.innerHTML=c.relationships.map((r,i)=>{const typeOpts=REL_TYPES.map(t=>`<option value="${t.value}" ${r.type===t.value?'selected':''}>${t.label}</option>`).join('');const charOpts=others.length?others.map(x=>`<option value="${x.id}" ${r.targetId===x.id?'selected':''}>${esc(x.name||'Unnamed')}</option>`).join(''):`<option value="">-- No other characters --</option>`;const rt=REL_TYPE_MAP[r.type]||REL_TYPE_MAP.other;return`<div class="list-block"><div class="list-block-head" style="flex-wrap:wrap;gap:6px"><span class="badge ${rt.badge}" data-rel-badge="${i}">${esc(rt.label)}</span><select data-rel-type="${i}" style="font-family:var(--font-mono);font-size:.72rem;border:2px solid var(--ink);background:var(--paper);padding:4px 6px">${typeOpts}</select><select data-rel-target="${i}" style="flex:1;font-family:var(--font-body);font-size:.85rem;border:2px solid var(--ink);background:var(--paper);padding:4px 6px">${charOpts}</select><button class="icon-btn" data-rel-del="${i}">${ICON_TRASH}</button></div><textarea class="inline-textarea" placeholder="Notes…" data-rel-desc="${i}">${esc(r.description)}</textarea></div>`;}).join('');wrap.querySelectorAll('[data-rel-type]').forEach(sel=>sel.addEventListener('change',()=>{const c=getEditing();if(!c)return;const idx=parseInt(sel.dataset.relType);c.relationships[idx].type=sel.value;const rt=REL_TYPE_MAP[sel.value]||REL_TYPE_MAP.other;const b=wrap.querySelector(`[data-rel-badge="${idx}"]`);b.className='badge '+rt.badge;b.textContent=rt.label;scheduleSave();}));wrap.querySelectorAll('[data-rel-target]').forEach(sel=>sel.addEventListener('change',()=>{const c=getEditing();if(c)c.relationships[parseInt(sel.dataset.relTarget)].targetId=sel.value;scheduleSave();}));wrap.querySelectorAll('[data-rel-desc]').forEach(ta=>ta.addEventListener('input',()=>{const c=getEditing();if(c)c.relationships[parseInt(ta.dataset.relDesc)].description=ta.value;scheduleSave();}));wrap.querySelectorAll('[data-rel-del]').forEach(btn=>btn.addEventListener('click',()=>{const c=getEditing();if(!c)return;c.relationships.splice(parseInt(btn.dataset.relDel),1);renderRelationships(c);scheduleSave();}));}
+
+let confirmCb=null;
+function openConfirm(msg,cb){document.getElementById('confirmMessage').textContent=msg;confirmCb=cb;document.getElementById('confirmOverlay').hidden=false;}
+function closeConfirm(){document.getElementById('confirmOverlay').hidden=true;confirmCb=null;}
+
+function renderMap(){const svg=document.getElementById('relSvg'),detail=document.getElementById('mapDetail'),chars=state.characters;if(!chars.length){svg.innerHTML=`<text x="300" y="300" text-anchor="middle" font-family="monospace" font-size="13" fill="#C9C2AE">No characters yet.</text>`;detail.innerHTML='<h4>Relationship Map</h4><p style="margin:0">Add characters to see them here.</p>';return;}const n=chars.length,CX=300,CY=300,r=n<=6?180:n<=14?210:n<=25?230:250;const pos=chars.map((_,i)=>{const a=(2*Math.PI*i/n)-Math.PI/2;return{x:CX+r*Math.cos(a),y:CY+r*Math.sin(a)};});const edges=[];const seen=new Set();chars.forEach((c,ci)=>{(c.relationships||[]).forEach(rel=>{const ti=chars.findIndex(x=>x.id===rel.targetId);if(ti===-1)return;const key=[Math.min(ci,ti),Math.max(ci,ti),rel.type].join('_');if(seen.has(key))return;seen.add(key);edges.push({from:ci,to:ti,type:rel.type});});});const hlIdx=state.highlightId?chars.findIndex(x=>x.id===state.highlightId):-1;const edgesHtml=edges.map(e=>{const p1=pos[e.from],p2=pos[e.to],rt=REL_TYPE_MAP[e.type]||REL_TYPE_MAP.other;const dim=hlIdx!==-1&&e.from!==hlIdx&&e.to!==hlIdx;const hi=hlIdx!==-1&&(e.from===hlIdx||e.to===hlIdx);const mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2,dx=p2.x-p1.x,dy=p2.y-p1.y;return`<path class="map-edge${dim?' dim':hi?' highlight':''}" stroke="${rt.color}" d="M${p1.x},${p1.y} Q${mx-dy*.2},${my+dx*.2} ${p2.x},${p2.y}"/>`;}).join('');const nodesHtml=chars.map((c,i)=>{const p=pos[i],dim=hlIdx!==-1&&i!==hlIdx,hi=i===hlIdx,rc=ROLE_COLORS[c.role]||'#C9C2AE';return`<g class="map-node${dim?' dim':hi?' highlight':''}" data-map-id="${c.id}" transform="translate(${p.x},${p.y})"><circle r="22" fill="var(--paper)" stroke="${rc}" stroke-width="3"/><circle r="18" fill="${rc}" opacity=".18"/><text dy="4">${esc((c.name||'?').slice(0,10))}</text></g>`;}).join('');svg.innerHTML=edgesHtml+nodesHtml;svg.querySelectorAll('.map-node').forEach(node=>node.addEventListener('click',()=>{const id=node.dataset.mapId;state.highlightId=state.highlightId===id?null:id;renderMap();if(state.highlightId){const c=chars.find(x=>x.id===state.highlightId);if(c)showMapDetail(c,chars);}else detail.innerHTML='<h4>Relationship Map</h4><p style="margin:0">Click a node to see connections.</p>';}));if(hlIdx!==-1)showMapDetail(chars[hlIdx],chars);}
+
+function showMapDetail(c,chars){const detail=document.getElementById('mapDetail');const rels=(c.relationships||[]).map(r=>{const t=chars.find(x=>x.id===r.targetId);if(!t)return'';const rt=REL_TYPE_MAP[r.type]||REL_TYPE_MAP.other;return`<div class="conn-row"><span><span class="badge ${rt.badge}" style="font-size:.6rem">${esc(rt.label)}</span> ${esc(t.name||'Unnamed')}</span></div>`;}).filter(Boolean).join('');const rev=chars.flatMap(ch=>{if(ch.id===c.id)return[];return(ch.relationships||[]).filter(r=>r.targetId===c.id).map(r=>{const rt=REL_TYPE_MAP[r.type]||REL_TYPE_MAP.other;return`<div class="conn-row" style="opacity:.7"><span><span class="badge ${rt.badge}" style="font-size:.6rem">${esc(rt.label)}</span> ← ${esc(ch.name||'Unnamed')}</span></div>`;});}).join('');detail.innerHTML=`<h4>${esc(c.name||'Unnamed')}</h4><p style="margin:0 0 10px;font-size:.82rem;opacity:.8">${esc(c.tagline||c.occupation||'')}</p>${rels||'<div style="opacity:.5;font-size:.8rem;font-family:var(--font-mono)">No outgoing relationships.</div>'}${rev}<div style="margin-top:12px"><button class="btn btn-sm" onclick="openEditor('${c.id}')">Open Character</button></div>`;}
+
+function renderRelLegend(){document.getElementById('relLegend').innerHTML=REL_TYPES.map(t=>`<div class="legend-row"><span class="legend-swatch" style="background:${t.color}"></span><span>${esc(t.label)}</span></div>`).join('');}
+
+function bindEvents(){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+  document.getElementById('searchInput').addEventListener('input',e=>{state.search=e.target.value;renderGallery();});
+  document.getElementById('newCharBtn').addEventListener('click',()=>{const c=newCharacter();state.characters.push(c);renderRoleFilters();renderGallery();saveCharacters();openEditor(c.id);});
+  [['charName','name'],['charImage','imageUrl'],['charAge','age'],['charGender','gender'],['charRole','role'],['charOccupation','occupation'],['charTagline','tagline'],['charHeight','height'],['charHair','hair'],['charEyes','eyes'],['charAppearance','appearance'],['charPersonality','personality'],['charLikes','likes'],['charDislikes','dislikes'],['charBackstory','backstory'],['charGoals','goals'],['charFlaws','flaws'],['charDesignNotes','designNotes']].forEach(([elId,key])=>{const el=document.getElementById(elId);el.addEventListener(el.tagName==='SELECT'?'change':'input',()=>{const c=getEditing();if(!c)return;c[key]=el.value;if(elId==='charImage')updatePortrait();if(['charName','charTagline','charRole','charAge'].includes(elId))renderGallery();scheduleSave();});});
+  document.getElementById('charTags').addEventListener('input',e=>{const c=getEditing();if(c){c.tags=e.target.value.split(',').map(t=>t.trim()).filter(Boolean);scheduleSave();}});
+  document.querySelectorAll('.modal-tab').forEach(tab=>tab.addEventListener('click',()=>switchTab(tab.dataset.section)));
+  document.getElementById('closeModalBtn').addEventListener('click',closeEditor);
+  document.getElementById('charModalOverlay').addEventListener('click',e=>{if(e.target.id==='charModalOverlay')closeEditor();});
+  document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;if(!document.getElementById('confirmOverlay').hidden){closeConfirm();return;}if(!document.getElementById('charModalOverlay').hidden)closeEditor();});
+  document.getElementById('deleteCharBtn').addEventListener('click',()=>{const c=getEditing();if(!c)return;openConfirm(`Delete "${c.name||'this character'}"? This can't be undone.`,()=>{const id=c.id;state.characters=state.characters.filter(x=>x.id!==id);state.characters.forEach(ch=>{ch.relationships=(ch.relationships||[]).filter(r=>r.targetId!==id);});document.getElementById('charModalOverlay').hidden=true;state.editingId=null;renderRoleFilters();renderGallery();if(state.view==='map')renderMap();saveCharacters();showToast('Character deleted.');});});
+  document.getElementById('confirmCancel').addEventListener('click',closeConfirm);
+  document.getElementById('confirmOk').addEventListener('click',()=>{if(confirmCb)confirmCb();closeConfirm();});
+  document.getElementById('confirmOverlay').addEventListener('click',e=>{if(e.target.id==='confirmOverlay')closeConfirm();});
+  document.getElementById('addAbilityBtn').addEventListener('click',()=>{const c=getEditing();if(!c)return;c.abilities.push({id:uid('abl'),name:'',description:''});renderAbilities(c);scheduleSave();});
+  document.getElementById('addRelationshipBtn').addEventListener('click',()=>{const c=getEditing();if(!c)return;const other=state.characters.find(x=>x.id!==c.id);c.relationships.push({id:uid('rel'),targetId:other?other.id:'',type:'ally',description:''});renderRelationships(c);scheduleSave();});
+  document.getElementById('exportBtn').addEventListener('click',()=>{const blob=new Blob([JSON.stringify(state.characters,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='characters.json';a.click();showToast('Exported characters.json');});
+  document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{const p=JSON.parse(ev.target.result);if(!Array.isArray(p))throw 0;openConfirm(`Import ${p.length} characters? This replaces your current cast.`,()=>{state.characters=p;saveCharacters();renderRoleFilters();renderGallery();if(state.view==='map')renderMap();showToast(`Imported ${p.length} characters.`);});}catch{showToast('Import failed — invalid file.');}};r.readAsText(f);e.target.value='';});
+}
+
+loadCharacters();renderRoleFilters();renderGallery();renderRelLegend();bindEvents();
+</script>
+</body>
+</html>
